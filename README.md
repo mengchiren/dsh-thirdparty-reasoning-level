@@ -20,8 +20,12 @@ UI 下拉 → 按等级映射线上参数。缺的只是厂商配置里的能力
 | `fangzhou-coding-plan-provider.yaml` | 可复用厂商配置模板（deepseek / glm / kimi 配方，含注释） |
 | `使用说明.md` | 完整文档：原理、验证步骤、坑位清单、迁移指南 |
 | `reapply-pi-ai-ark-patch.ps1` | pi-ai 方舟兼容补丁重打脚本（DSH 升级后一键重打，幂等） |
-| `openai-completions.js.original` | pi-ai 原始文件备份（补丁前状态） |
-| `settings.yaml.backup-*` | settings.yaml 修改前备份（无密钥，仅配置） |
+| `LICENSE` | MIT 许可证 |
+
+> 第三方说明：本项目的补丁作用于 [@earendil-works/pi-ai](https://www.npmjs.com/package/@earendil-works/pi-ai)
+> （MIT License）的 openai-completions 探测逻辑；补丁前的原始文件仅留作本机
+> 工作区备份，不入库。所有档位/参数结论均来自对公网端点的直接实测
+> （2026-08-20），接入前请自行验证。
 
 ## 快速开始
 
