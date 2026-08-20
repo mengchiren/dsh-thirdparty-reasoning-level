@@ -1,0 +1,119 @@
+# =============================================================================
+# 火山方舟 Coding Plan 厂商配置模板（DSH llm-pi-ai）
+# -----------------------------------------------------------------------------
+# 用途：让 DSH 模型选择器为第三方模型显示"推理等级"下拉，并按等级发送对应
+#       线上参数。此模板对应 2026-08 方舟 Coding Plan 已验证的模型能力。
+#
+# 使用方式：
+#   1) 将本文件里 `fangzhou:` 整段（含缩进）粘贴到
+#      %USERPROFILE%\.dsh\settings.yaml 的 `llm-pi-ai.providers:` 下；
+#   2) settings.yaml 被 dsh-settings-file 监听，保存后即时热生效（无需重启）；
+#   3) 打开模型选择器（右上角），切到 方舟/对应模型 即可看到推理等级下拉。
+#
+# 原理速记：
+#   - reasoningEfforts：等级 -> 线上参数值 的映射。未声明的等级 = 不支持。
+#     `off` 允许值为 null（= 支持"关闭"，发送时省略推理参数）。
+#   - compat.thinkingFormat：推理方言（deepseek / qwen / openai 等），
+#     仅 openai-completions 协议支持。
+#   - compat.supportsReasoningEffort：是否随请求发送 reasoning_effort。
+#   - 厂商级 `reasoning: high`：所有支持该等级的模型的默认推理等级，
+#     同时让适配器声明默认值，防止旧会话里残留的越界等级导致报错。
+# =============================================================================
+
+llm-pi-ai:
+  providers:
+    fangzhou:
+      displayName: 方舟
+      apiKeyEnv: FANGZHOU_API_KEY
+      # 必须用 OpenAI 兼容面（Chat Completions 报文）：
+      #   - 推理等级（reasoning_effort / thinking）只在该面上被验证支持；
+      #   - anthropic-messages 面只有"开/关 + token 预算"，DSH 表达不了等级；
+      #   - openai-responses（Responses 报文）不是该端点的报文格式。
+      api: openai-completions
+      baseURL: https://ark.cn-beijing.volces.com/api/coding/v3
+      # 厂商级默认推理等级；所有模型默认取此等级（如该模型支持）。
+      reasoning: high
+      models:
+        # -------------------------------------------------------------------
+        # DeepSeek V4 系列：官方 API 档位表（deepseek-v4-flash/pro 一致）：
+        #   low -> low，medium -> high（服务端收敛），high -> high，
+        #   xhigh -> high（收敛），max -> max
+        # 线上参数：thinking: {type: "enabled"} + reasoning_effort: <档位>
+        # 注意：
+        #   - 思考模式默认开启、effort 默认 high（省略 thinking 参数 = 思考开）；
+        #   - off 声明为 null 时 UI 不显示"Off"；想可选"关闭"改成 `off: disabled`
+        #     （发送 thinking: {type: "disabled"}，若方舟拒绝再改回 null）；
+        #   - low/max 在 DeepSeek 官方 API 有效；方舟 coding 端点只验证过 high，
+        #     若方舟报 400，删掉对应行即可回退。
+        # -------------------------------------------------------------------
+        - id: deepseek-v4-flash
+          name: deepseek-v4-flash
+          contextWindow: 1000000
+          # 方舟硬性上限 128000，超过直接 400 InvalidParameter。
+          maxTokens: 128000
+          reasoningEfforts:
+            off: null
+            low: low
+            high: high
+            max: max
+          compat:
+            thinkingFormat: deepseek
+            supportsReasoningEffort: true
+
+        - id: deepseek-v4-pro
+          name: deepseek-v4-pro
+          contextWindow: 1000000
+          maxTokens: 128000
+          reasoningEfforts:
+            off: null
+            low: low
+            high: high
+            max: max
+          compat:
+            thinkingFormat: deepseek
+            supportsReasoningEffort: true
+
+        # -------------------------------------------------------------------
+        # GLM-5.3：支持 reasoning_effort = low | medium | high | max。
+        #   思考无法真正关闭，"low" 约等于关闭（实测验证）。
+        #   off -> reasoning_effort: "low"（这是声明 off: low 的含义）
+        # -------------------------------------------------------------------
+        - id: glm-5.3
+          name: glm-5.3
+          contextWindow: 1000000
+          maxTokens: 128000
+          reasoningEfforts:
+            off: low
+            low: low
+            medium: medium
+            high: high
+            max: max
+          compat:
+            supportsReasoningEffort: true
+
+        # -------------------------------------------------------------------
+        # 未来扩展参考（同套餐其他模型，按需取消注释）：
+        #
+        # - id: kimi-k2.7-code          # 思考开关型（enable_thinking），只验证 off/high
+        #   name: Kimi K2.7 Code
+        #   contextWindow: 262144
+        #   maxTokens: 128000
+        #   reasoningEfforts:
+        #     off: null
+        #     high: high
+        #   compat:
+        #     thinkingFormat: qwen
+        #     supportsReasoningEffort: false
+        #
+        # - id: glm-5.2                 # 无思考开关，推理内容会返回但不可控
+        #   name: GLM-5.2
+        #   contextWindow: 1000000
+        #   maxTokens: 128000
+        #   reasoningEfforts: false     # 声明为不支持，UI 不显示等级控件
+        #
+        # - id: minimax-m3              # 同上，无开关
+        #   name: MiniMax-M3
+        #   contextWindow: 512000
+        #   maxTokens: 128000
+        #   reasoningEfforts: false
+        # -------------------------------------------------------------------
