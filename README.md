@@ -27,7 +27,10 @@ UI 下拉 → 按等级映射线上参数。缺的只是厂商配置里的能力
 
 1. 把 `fangzhou-coding-plan-provider.yaml` 的 `fangzhou:` 段粘贴进
    `%USERPROFILE%\.dsh\settings.yaml` 的 `llm-pi-ai.providers:` 下（保存即热生效）；
-2. 确保环境变量 `FANGZHOU_API_KEY` 存在；
+   中转站厂商注意：`baseURL` 必须带路径前缀（如 `https://xxx.com/v1`），
+   pi-ai 会拼接 `/chat/completions`，缺前缀会打到网页首页导致流解析失败
+   （报 `Stream ended without finish_reason` 并无限重试）；
+2. 确保环境变量 `FANGZHOU_API_KEY`（及中转站各自的 `*_API_KEY`）存在；
 3. 若 DSH 更新过 node_modules，运行 `reapply-pi-ai-ark-patch.ps1` 重打补丁并重启 DSH；
 4. 打开模型选择器：deepseek 模型可选 Low/High/Max，glm-5.3 可选
    Off/Low/Medium/High/Max。

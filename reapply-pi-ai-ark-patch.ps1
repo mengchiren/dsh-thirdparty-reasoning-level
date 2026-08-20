@@ -1,16 +1,22 @@
-﻿# 重打 pi-ai 严格网关兼容补丁
+﻿# 重打 pi-ai 方舟兼容补丁
 # 用途：DSH 升级 / npm 重装后，node_modules 会被重置，本补丁会丢失。
 #       运行本脚本即可一键重打（幂等：已打过则跳过）。
 # 生效条件：打完补丁需要【重启 DSH】——HMR 不会热载 node_modules。
 #
-# 补丁内容：让 pi-ai 对"严格 OpenAI 兼容网关"（不认 developer 角色 /
-# 只认 max_tokens / 不收 strict 工具字段的端点）按保守能力走：
-#   - volces.com       -> 火山方舟 coding 端点（deepseek 需回传思维链）
-#   - wawazz.xyz       -> 中转站（新增域名时在 $strictDomains 里追加即可）
+# 补丁内容（仅火山方舟 coding 端点，2026-08-20 实测校准）：
+#   - supportsDeveloperRole=false  方舟不认 developer 角色（实测 400）
+#   - maxTokensField=max_tokens    方舟两者都认，取扩展验证过的写法
+#   - requiresReasoningContentOnAssistantMessages=true
+#                                  deepseek 官方要求工具轮回传思维链
+#   注意：不要动 supportsStrictMode！方舟/中转站都【要求工具必须带 strict
+#   字段】（省略会 400 "could not parse the JSON body"），strict:false 双方都接受。
+#
+# 中转站（如 wawazz.xyz）不需要本补丁：实测接受 developer 角色 / strict:false /
+# max_completion_tokens / reasoning_effort。它们的坑是 baseURL 要带 /v1。
 $ErrorActionPreference = "Stop"
 
 $target = "C:\Users\houxiaoyue\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@earendil-works\pi-ai\dist\api\openai-completions.js"
-$strictDomains = @("volces.com", "wawazz.xyz")
+$strictDomains = @("volces.com")
 
 if (-not (Test-Path $target)) {
     Write-Host "[ERROR] 找不到 pi-ai 文件（dsh 安装路径可能已变化）：" -ForegroundColor Red
@@ -41,10 +47,6 @@ $pairs = @(
     @(
         'requiresReasoningContentOnAssistantMessages: isDeepSeek,',
         'requiresReasoningContentOnAssistantMessages: isDeepSeek || baseUrl.includes("volces.com"),'
-    ),
-    @(
-        'supportsStrictMode: !isMoonshot && !isTogether && !isCloudflareAiGateway && !isNvidia,',
-        'supportsStrictMode: !isMoonshot && !isTogether && !isCloudflareAiGateway && !isNvidia && !isStrictGateway,'
     )
 )
 
