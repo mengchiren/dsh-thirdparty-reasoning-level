@@ -39,5 +39,7 @@ UI 下拉 → 按等级映射线上参数。缺的只是厂商配置里的能力
 | deepseek-v4-flash / pro | Low / High / Max | `thinking:{type:"enabled"}` + `reasoning_effort` |
 | glm-5.3 | Off(low) / Low / Medium / High / Max | `reasoning_effort`（思考不可关闭，low≈off） |
 | kimi-k2.7-code | High | `enable_thinking`（thinkingFormat: qwen） |
+| gpt-5.x（中转站透传） | Off(minimal) / Low / Medium / High | `reasoning_effort`（无 max；Off 实际为 minimal） |
 
-详见 `使用说明.md`（含 7 个坑位、设置页写回、GBK 乱码、agent-default-model 注意事项等）。
+详见 `使用说明.md`（含 7 个坑位、设置页写回、GBK 乱码、agent-default-model、
+中转站配方与 pi-ai 严格网关补丁等注意事项）。
